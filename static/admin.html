@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>管理者パネル | 口コミ監視</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{--green:#1a3d2b;--gl:#2d6647;--gp:#e8f0eb;--bg:#f4f5f0;--bd:#e8e8e4;--red:#c0392b;--rp:#fdf0ef;}
+body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:#111;}
+.topbar{background:var(--green);padding:0 32px;height:56px;display:flex;align-items:center;
+  justify-content:space-between;}
+.tb-logo{color:#fff;font-weight:700;font-size:14px;}
+.tb-badge{background:rgba(255,255,255,.15);color:#fff;font-size:11px;padding:3px 10px;
+  border-radius:20px;margin-left:10px;}
+.tb-right{display:flex;align-items:center;gap:16px;}
+.tb-link{color:rgba(255,255,255,.7);font-size:12px;text-decoration:none;cursor:pointer;}
+.tb-link:hover{color:#fff;}
+.main{max-width:960px;margin:32px auto;padding:0 24px;}
+.ph{margin-bottom:24px;}
+.ph h1{font-size:20px;font-weight:700;}
+.ph p{font-size:12px;color:#666;margin-top:4px;}
+.grid{display:grid;grid-template-columns:1fr 360px;gap:24px;}
+.sec{background:#fff;border-radius:12px;border:1px solid var(--bd);overflow:hidden;margin-bottom:24px;}
+.sec-hd{padding:16px 20px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;}
+.sec-title{font-size:14px;font-weight:700;}
+.sec-ct{font-size:11px;color:#888;}
+/* User table */
+.ut{width:100%;border-collapse:collapse;}
+.ut th{font-size:10px;color:#888;font-weight:500;text-align:left;padding:10px 20px;
+  border-bottom:1px solid var(--bd);text-transform:uppercase;letter-spacing:.04em;}
+.ut td{padding:14px 20px;border-bottom:1px solid var(--bd);font-size:13px;}
+.ut tr:last-child td{border-bottom:none;}
+.ut tr:hover td{background:#fafaf8;}
+.role-badge{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:500;}
+.role-admin{background:#fff3cd;color:#856404;}
+.role-client{background:var(--gp);color:var(--gl);}
+.mono{font-family:'DM Mono',monospace;font-size:12px;color:#666;}
+.actions{display:flex;gap:6px;}
+.btn-sm{font-size:11px;padding:5px 10px;border-radius:6px;cursor:pointer;border:none;font-family:inherit;}
+.btn-reset{background:#eef4ff;color:#2d5fb5;}
+.btn-del{background:var(--rp);color:var(--red);}
+/* Form */
+.sf{padding:20px;}
+.fg{margin-bottom:14px;}
+.fl{display:block;font-size:11px;font-weight:500;color:#444;margin-bottom:5px;}
+.fi{width:100%;border:1.5px solid var(--bd);border-radius:7px;padding:9px 12px;
+  font-size:13px;font-family:inherit;outline:none;transition:border-color .15s;}
+.fi:focus{border-color:var(--green);}
+.fi-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.role-sel{width:100%;border:1.5px solid var(--bd);border-radius:7px;padding:9px 12px;
+  font-size:13px;font-family:inherit;outline:none;background:#fff;}
+.btn-p{width:100%;background:var(--green);color:#fff;border:none;border-radius:7px;
+  padding:11px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;}
+.btn-p:hover{background:var(--gl);}
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px;}
+.sc{background:#fff;border-radius:11px;padding:16px;border:1px solid var(--bd);}
+.sc-lbl{font-size:10px;color:#888;font-weight:500;text-transform:uppercase;letter-spacing:.04em;margin-bottom:6px;}
+.sc-val{font-size:24px;font-weight:700;font-family:'DM Mono',monospace;color:#111;}
+/* Toast */
+.toast{position:fixed;bottom:22px;right:22px;background:#111;color:#fff;padding:11px 16px;
+  border-radius:8px;font-size:13px;z-index:999;transform:translateY(60px);opacity:0;transition:all .3s;}
+.toast.show{transform:translateY(0);opacity:1;}
+/* Modal */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;display:none;
+  align-items:center;justify-content:center;}
+.modal-bg.show{display:flex;}
+.modal{background:#fff;border-radius:12px;padding:28px;width:360px;box-shadow:0 8px 32px rgba(0,0,0,.2);}
+.modal h2{font-size:16px;font-weight:700;margin-bottom:8px;}
+.modal p{font-size:13px;color:#666;margin-bottom:20px;}
+.modal-btns{display:flex;gap:10px;justify-content:flex-end;}
+.mb-cancel{padding:9px 18px;border-radius:7px;border:1px solid var(--bd);background:#fff;
+  font-size:13px;cursor:pointer;font-family:inherit;}
+.mb-ok{padding:9px 18px;border-radius:7px;background:var(--red);color:#fff;border:none;
+  font-size:13px;cursor:pointer;font-family:inherit;}
+.no-data{padding:32px;text-align:center;color:#aaa;font-size:13px;}
+.loading{padding:24px;text-align:center;color:#aaa;font-size:13px;}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div style="display:flex;align-items:center;">
+    <span class="tb-logo">口コミ監視</span>
+    <span class="tb-badge">管理者パネル</span>
+  </div>
+  <div class="tb-right">
+    <a class="tb-link" href="/">ダッシュボードへ</a>
+    <span class="tb-link" onclick="logout()">ログアウト</span>
+  </div>
+</div>
+
+<div class="main">
+  <div class="ph"><h1>クライアント管理</h1><p>利用権限の付与・管理を行います</p></div>
+
+  <div class="stats" id="stats">
+    <div class="sc"><div class="sc-lbl">総クライアント数</div><div class="sc-val" id="s-total">—</div></div>
+    <div class="sc"><div class="sc-lbl">総登録店舗数</div><div class="sc-val" id="s-stores">—</div></div>
+    <div class="sc"><div class="sc-lbl">今月の新規</div><div class="sc-val" id="s-new">—</div></div>
+  </div>
+
+  <div class="grid">
+    <!-- Client list -->
+    <div class="sec">
+      <div class="sec-hd"><span class="sec-title">クライアント一覧</span><span class="sec-ct" id="user-count"></span></div>
+      <table class="ut">
+        <thead><tr><th>名前</th><th>メール</th><th>権限</th><th>店舗数</th><th>登録日</th><th>操作</th></tr></thead>
+        <tbody id="user-tbody"><tr><td colspan="6" class="loading">読み込み中...</td></tr></tbody>
+      </table>
+    </div>
+
+    <!-- Add client form -->
+    <div>
+      <div class="sec">
+        <div class="sec-hd"><span class="sec-title">新規クライアント追加</span></div>
+        <div class="sf">
+          <div class="fg"><label class="fl">会社・店舗グループ名</label>
+            <input class="fi" id="add-name" placeholder="例: いちえん"></div>
+          <div class="fg"><label class="fl">メールアドレス</label>
+            <input class="fi" type="email" id="add-email" placeholder="owner@example.com"></div>
+          <div class="fg"><label class="fl">初期パスワード</label>
+            <input class="fi" type="text" id="add-pw" placeholder="例: Ichien2024!"></div>
+          <div class="fg"><label class="fl">権限</label>
+            <select class="role-sel" id="add-role">
+              <option value="client">クライアント（一般）</option>
+              <option value="admin">管理者</option>
+            </select>
+          </div>
+          <button class="btn-p" onclick="createUser()">アカウントを作成</button>
+        </div>
+      </div>
+
+      <!-- Reset password -->
+      <div class="sec">
+        <div class="sec-hd"><span class="sec-title">パスワードリセット</span></div>
+        <div class="sf">
+          <div class="fg"><label class="fl">対象ユーザーID</label>
+            <input class="fi" type="number" id="reset-uid" placeholder="ユーザーID"></div>
+          <div class="fg"><label class="fl">新しいパスワード</label>
+            <input class="fi" type="text" id="reset-pw" placeholder="新しいパスワード"></div>
+          <button class="btn-p" style="background:#555;" onclick="resetPassword()">パスワードをリセット</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Delete confirm modal -->
+<div class="modal-bg" id="modal">
+  <div class="modal">
+    <h2>アカウント削除</h2>
+    <p id="modal-msg"></p>
+    <div class="modal-btns">
+      <button class="mb-cancel" onclick="closeModal()">キャンセル</button>
+      <button class="mb-ok" onclick="confirmDelete()">削除する</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let deleteTargetId = null;
+const thisMonth = new Date().toISOString().slice(0,7);
+
+function toast(msg,ms=2500){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),ms);
+}
+
+async function logout(){
+  await fetch('/api/logout',{method:'POST'});location.href='/login';
+}
+
+async function loadUsers(){
+  const data=await fetch('/api/admin/users').then(r=>r.json());
+  const clients=data.filter(u=>u.role==='client');
+  const totalStores=data.reduce((a,u)=>a+(u.store_count||0),0);
+  const newThisMonth=data.filter(u=>u.created_at&&u.created_at.startsWith(thisMonth)).length;
+  document.getElementById('s-total').textContent=clients.length;
+  document.getElementById('s-stores').textContent=totalStores;
+  document.getElementById('s-new').textContent=newThisMonth;
+  document.getElementById('user-count').textContent=`${data.length}件`;
+  document.getElementById('user-tbody').innerHTML=data.length
+    ? data.map(u=>`<tr>
+        <td><strong>${u.name}</strong></td>
+        <td><span class="mono">${u.email}</span></td>
+        <td><span class="role-badge role-${u.role}">${u.role==='admin'?'管理者':'クライアント'}</span></td>
+        <td>${u.store_count||0}店舗</td>
+        <td class="mono">${(u.created_at||'').slice(0,10)}</td>
+        <td><div class="actions">
+          <button class="btn-sm btn-reset" onclick="setResetTarget(${u.id})">PW変更</button>
+          <button class="btn-sm btn-del" onclick="openDelete(${u.id},'${u.name}')">削除</button>
+        </div></td>
+      </tr>`).join('')
+    : '<tr><td colspan="6" class="no-data">クライアントがいません</td></tr>';
+}
+
+async function createUser(){
+  const name=document.getElementById('add-name').value.trim();
+  const email=document.getElementById('add-email').value.trim();
+  const pw=document.getElementById('add-pw').value.trim();
+  const role=document.getElementById('add-role').value;
+  if(!name||!email||!pw){toast('全項目を入力してください');return;}
+  const res=await fetch('/api/admin/users',{method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({name,email,password:pw,role})});
+  if(res.ok){
+    toast('アカウントを作成しました');
+    ['add-name','add-email','add-pw'].forEach(id=>document.getElementById(id).value='');
+    loadUsers();
+  } else {
+    const e=await res.json();toast(e.detail||'エラーが発生しました');
+  }
+}
+
+function setResetTarget(uid){
+  document.getElementById('reset-uid').value=uid;
+  document.getElementById('reset-pw').focus();
+}
+
+async function resetPassword(){
+  const uid=document.getElementById('reset-uid').value;
+  const pw=document.getElementById('reset-pw').value.trim();
+  if(!uid||!pw){toast('ユーザーIDと新しいパスワードを入力してください');return;}
+  await fetch(`/api/admin/users/${uid}/reset-password`,{method:'POST',
+    headers:{'Content-Type':'application/json'},body:JSON.stringify({new_password:pw})});
+  toast('パスワードをリセットしました');
+  document.getElementById('reset-uid').value='';
+  document.getElementById('reset-pw').value='';
+}
+
+function openDelete(uid,name){
+  deleteTargetId=uid;
+  document.getElementById('modal-msg').textContent=`「${name}」のアカウントと全データを削除します。この操作は取り消せません。`;
+  document.getElementById('modal').classList.add('show');
+}
+function closeModal(){document.getElementById('modal').classList.remove('show');deleteTargetId=null;}
+async function confirmDelete(){
+  if(!deleteTargetId)return;
+  await fetch(`/api/admin/users/${deleteTargetId}`,{method:'DELETE'});
+  toast('削除しました');closeModal();loadUsers();
+}
+
+loadUsers();
+</script>
+</body>
+</html>

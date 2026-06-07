@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>口コミ監視ダッシュボード</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+:root{--green:#1a3d2b;--gl:#2d6647;--gp:#e8f0eb;--bg:#f4f5f0;--card:#fff;
+  --tx:#111;--sub:#666;--bd:#e8e8e4;--red:#c0392b;--rp:#fdf0ef;
+  --am:#b7760d;--ap:#fef8ed;--bp:#eef4ff;}
+body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--tx);}
+.app{display:flex;min-height:100vh;}
+.sb{width:210px;background:var(--green);flex-shrink:0;display:flex;flex-direction:column;
+  position:fixed;top:0;left:0;bottom:0;z-index:100;}
+.main{margin-left:210px;flex:1;padding:28px;}
+.sb-top{padding:22px 18px 16px;border-bottom:1px solid rgba(255,255,255,.1);}
+.sb-title{color:#fff;font-weight:700;font-size:14px;}
+.sb-sub{color:rgba(255,255,255,.4);font-size:10px;margin-top:2px;}
+.sb-nav{padding:12px 0;flex:1;}
+.nav-a{display:flex;align-items:center;gap:9px;padding:10px 18px;color:rgba(255,255,255,.6);
+  font-size:12px;font-weight:500;cursor:pointer;border-left:3px solid transparent;transition:all .15s;}
+.nav-a:hover{color:#fff;background:rgba(255,255,255,.07);}
+.nav-a.active{color:#fff;background:rgba(255,255,255,.12);border-left-color:#5db87a;}
+.sb-footer{padding:14px 18px;border-top:1px solid rgba(255,255,255,.1);}
+.sb-btn{width:100%;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);
+  color:#fff;border-radius:7px;padding:8px;font-size:11px;font-family:inherit;cursor:pointer;}
+.sb-btn:hover{background:rgba(255,255,255,.18);}
+.sb-logout{display:block;text-align:center;color:rgba(255,255,255,.35);font-size:11px;
+  margin-top:9px;cursor:pointer;}
+.sb-logout:hover{color:rgba(255,255,255,.65);}
+.page{display:none;}.page.active{display:block;}
+.ph{margin-bottom:22px;}.ph h1{font-size:20px;font-weight:700;}.ph p{font-size:12px;color:var(--sub);margin-top:3px;}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px;}
+.sc{background:var(--card);border-radius:11px;padding:18px;border:1px solid var(--bd);}
+.sc-lbl{font-size:10px;color:var(--sub);font-weight:500;text-transform:uppercase;letter-spacing:.04em;margin-bottom:7px;}
+.sc-val{font-size:26px;font-weight:700;font-family:'DM Mono',monospace;}
+.sc-val.red{color:var(--red)}.sc-val.green{color:var(--gl)}
+.sc-sub{font-size:10px;color:var(--sub);margin-top:3px;}
+.sec{background:var(--card);border-radius:11px;border:1px solid var(--bd);margin-bottom:20px;overflow:hidden;}
+.sec-hd{padding:14px 18px;border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;}
+.sec-title{font-size:13px;font-weight:700;}
+.sec-ct{font-size:11px;color:var(--sub);}
+.rv{padding:14px 18px;border-bottom:1px solid var(--bd);}
+.rv:last-child{border-bottom:none;}
+.rv-meta{display:flex;align-items:center;gap:8px;margin-bottom:7px;flex-wrap:wrap;}
+.b-store{font-size:10px;font-weight:500;background:var(--gp);color:var(--gl);padding:2px 8px;border-radius:20px;}
+.b-urg{font-size:10px;font-weight:500;padding:2px 8px;border-radius:20px;}
+.urg-hi{background:var(--rp);color:var(--red)}.urg-mid{background:var(--ap);color:var(--am)}
+.urg-lo{background:var(--gp);color:var(--gl)}
+.tag{font-size:10px;background:#f0f0ec;color:#555;padding:2px 7px;border-radius:12px;}
+.rv-sum{font-size:12px;font-weight:500;margin-bottom:5px;}
+.rv-txt{font-size:12px;color:var(--sub);line-height:1.65;}
+.rv-reply{background:var(--bp);border-radius:7px;padding:9px 12px;margin-top:9px;}
+.rv-rl{font-size:10px;font-weight:500;color:#4a7dd9;margin-bottom:3px;}
+.rv-rt{font-size:12px;color:#2d5fb5;line-height:1.6;}
+.rv-date{font-size:10px;color:#bbb;margin-left:auto;}
+.no-data{padding:36px;text-align:center;color:var(--sub);font-size:13px;}
+.loading{padding:24px;text-align:center;color:var(--sub);font-size:13px;}
+/* Competitor table */
+.ct{width:100%;border-collapse:collapse;}
+.ct th{font-size:10px;color:var(--sub);font-weight:500;text-align:left;
+  padding:10px 18px;border-bottom:1px solid var(--bd);text-transform:uppercase;letter-spacing:.04em;}
+.ct td{padding:13px 18px;border-bottom:1px solid var(--bd);font-size:13px;}
+.ct tr:last-child td{border-bottom:none;}
+.ct tr.own td{background:var(--gp);}
+.own-dot{display:inline-block;width:6px;height:6px;background:var(--gl);border-radius:50%;margin-right:5px;vertical-align:middle;}
+.rank{font-family:'DM Mono',monospace;font-size:17px;font-weight:700;color:#ccc;}
+.dp{color:var(--gl);font-weight:500}.dn{color:var(--red);font-weight:500}
+/* Settings */
+.settings-wrap{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.sf{padding:20px;}
+.fg{margin-bottom:14px;}
+.fl{display:block;font-size:11px;font-weight:500;color:#444;margin-bottom:5px;}
+.fi{width:100%;border:1.5px solid var(--bd);border-radius:7px;padding:9px 12px;
+  font-size:13px;font-family:inherit;outline:none;transition:border-color .15s;}
+.fi:focus{border-color:var(--green);}
+.btn{padding:9px 18px;border-radius:7px;font-size:13px;font-weight:500;font-family:inherit;cursor:pointer;border:none;transition:all .15s;}
+.btn-p{background:var(--green);color:#fff;}.btn-p:hover{background:var(--gl);}
+.btn-d{background:transparent;color:var(--red);border:1px solid #f0cece;font-size:12px;padding:6px 12px;}
+.btn-d:hover{background:var(--rp);}
+.store-list{padding:0 18px 16px;}
+.sr{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--bd);}
+.sr:last-child{border-bottom:none;}
+.si{display:flex;flex-direction:column;gap:2px;}
+.sn{font-size:13px;font-weight:500;}
+.sid{font-size:10px;color:var(--sub);font-family:'DM Mono',monospace;}
+.sec-sub-hd{padding:12px 18px 8px;font-size:11px;font-weight:500;color:var(--sub);
+  text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--bd);background:#fafaf8;}
+/* AI Chat */
+.chat-wrap{display:flex;flex-direction:column;height:calc(100vh - 140px);min-height:500px;}
+.chat-msgs{flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:14px;}
+.msg{display:flex;gap:10px;align-items:flex-start;}
+.msg.user{flex-direction:row-reverse;}
+.msg-avatar{width:30px;height:30px;border-radius:50%;flex-shrink:0;display:flex;
+  align-items:center;justify-content:center;font-size:13px;font-weight:500;}
+.ai-av{background:var(--green);color:#fff;}
+.user-av{background:#e8e8e4;color:#555;}
+.msg-bubble{max-width:72%;padding:11px 14px;border-radius:14px;font-size:13px;line-height:1.7;}
+.ai-bubble{background:var(--card);border:1px solid var(--bd);border-radius:4px 14px 14px 14px;color:var(--tx);}
+.user-bubble{background:var(--green);color:#fff;border-radius:14px 4px 14px 14px;}
+.chat-input-wrap{padding:16px 20px;border-top:1px solid var(--bd);background:var(--card);
+  display:flex;gap:10px;align-items:flex-end;}
+.chat-input{flex:1;border:1.5px solid var(--bd);border-radius:10px;padding:10px 14px;
+  font-size:13px;font-family:inherit;outline:none;resize:none;min-height:44px;max-height:120px;
+  transition:border-color .15s;line-height:1.5;}
+.chat-input:focus{border-color:var(--green);}
+.chat-send{background:var(--green);color:#fff;border:none;border-radius:10px;
+  padding:10px 18px;font-size:13px;font-weight:500;font-family:inherit;cursor:pointer;white-space:nowrap;}
+.chat-send:hover{background:var(--gl);}.chat-send:disabled{opacity:.5;cursor:default;}
+.chat-intro{background:var(--gp);border-radius:11px;padding:16px 18px;margin-bottom:16px;}
+.chat-intro p{font-size:12px;color:var(--gl);line-height:1.7;}
+.chat-suggestions{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
+.sugg{font-size:11px;background:#fff;border:1px solid #b8d4c0;color:var(--gl);
+  padding:5px 12px;border-radius:20px;cursor:pointer;transition:all .15s;}
+.sugg:hover{background:var(--gp);}
+.typing{display:flex;gap:4px;align-items:center;padding:4px 0;}
+.typing span{width:6px;height:6px;background:#ccc;border-radius:50%;animation:blink 1.2s infinite;}
+.typing span:nth-child(2){animation-delay:.2s;}
+.typing span:nth-child(3){animation-delay:.4s;}
+@keyframes blink{0%,80%,100%{opacity:.2;}40%{opacity:1;}}
+.toast{position:fixed;bottom:22px;right:22px;background:#111;color:#fff;padding:11px 16px;
+  border-radius:8px;font-size:13px;z-index:999;transform:translateY(60px);opacity:0;transition:all .3s;}
+.toast.show{transform:translateY(0);opacity:1;}
+@media(max-width:768px){
+  .sb{width:100%;height:56px;flex-direction:row;bottom:auto;align-items:center;padding:0 12px;}
+  .sb-top,.sb-footer{display:none;}
+  .sb-nav{display:flex;flex-direction:row;padding:0;overflow-x:auto;}
+  .nav-a{white-space:nowrap;padding:8px 12px;border-left:none;border-bottom:3px solid transparent;}
+  .nav-a.active{border-bottom-color:#5db87a;border-left-color:transparent;}
+  .main{margin-left:0;margin-top:56px;padding:14px;}
+  .stats{grid-template-columns:repeat(2,1fr);gap:10px;}
+  .settings-wrap{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="sb">
+  <div class="sb-top">
+    <div class="sb-title">口コミ監視</div>
+    <div class="sb-sub">飲食店グループ向け</div>
+  </div>
+  <nav class="sb-nav">
+    <div class="nav-a active" onclick="showPage('dashboard',this)">📊 ダッシュボード</div>
+    <div class="nav-a" onclick="showPage('reviews',this)">💬 口コミ一覧</div>
+    <div class="nav-a" onclick="showPage('competitors',this)">🏆 競合比較</div>
+    <div class="nav-a" onclick="showPage('ai',this)">🤖 AI分析チャット</div>
+    <div class="nav-a" onclick="showPage('settings',this)">⚙️ 店舗設定</div>
+  </nav>
+  <div class="sb-footer">
+    <button class="sb-btn" onclick="manualRefresh()">🔄 今すぐ更新</button>
+    <span class="sb-logout" onclick="logout()">ログアウト</span>
+  </div>
+</aside>
+
+<main class="main">
+
+<!-- Dashboard -->
+<div id="page-dashboard" class="page active">
+  <div class="ph"><h1>ダッシュボード</h1><p id="last-updated">読み込み中...</p></div>
+  <div class="stats" id="stat-grid"><div class="loading">読み込み中...</div></div>
+  <div class="sec">
+    <div class="sec-hd"><span class="sec-title">🔴 要対応アラート</span><span class="sec-ct" id="alert-count"></span></div>
+    <div id="alert-list"><div class="loading">読み込み中...</div></div>
+  </div>
+  <div class="sec">
+    <div class="sec-hd"><span class="sec-title">最新の口コミ（自店）</span></div>
+    <div id="recent-list"><div class="loading">読み込み中...</div></div>
+  </div>
+</div>
+
+<!-- Reviews -->
+<div id="page-reviews" class="page">
+  <div class="ph"><h1>口コミ一覧</h1><p>自店舗への全レビュー</p></div>
+  <div class="sec"><div id="all-reviews-list"><div class="loading">読み込み中...</div></div></div>
+</div>
+
+<!-- Competitors -->
+<div id="page-competitors" class="page">
+  <div class="ph"><h1>競合比較</h1><p>エリア内の評価ランキング</p></div>
+  <div class="sec">
+    <table class="ct">
+      <thead><tr><th>順位</th><th>店舗名</th><th>平均評価</th><th>レビュー数</th><th>自店との差</th></tr></thead>
+      <tbody id="comp-tbody"><tr><td colspan="5" class="loading">読み込み中...</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- AI Chat -->
+<div id="page-ai" class="page">
+  <div class="ph"><h1>🤖 AI分析チャット</h1><p>口コミデータを基に競合分析・改善提案をAIに質問できます</p></div>
+  <div class="sec chat-wrap">
+    <div class="chat-msgs" id="chat-msgs">
+      <div class="chat-intro">
+        <p>自店・競合店のGoogleレビューデータを踏まえて質問できます。<br>例えば「競合との差別化ポイントは？」「最近の悪い口コミの傾向は？」など、経営判断に役立つ分析をAIが行います。</p>
+        <div class="chat-suggestions">
+          <span class="sugg" onclick="sendSugg(this)">競合と比べた自店の強みと弱みは？</span>
+          <span class="sugg" onclick="sendSugg(this)">最近のネガティブ口コミの傾向と改善策は？</span>
+          <span class="sugg" onclick="sendSugg(this)">評価を上げるために今すぐできることは？</span>
+          <span class="sugg" onclick="sendSugg(this)">競合に勝てていない点はどこですか？</span>
+        </div>
+      </div>
+    </div>
+    <div class="chat-input-wrap">
+      <textarea class="chat-input" id="chat-input" placeholder="質問を入力してください..." rows="1"
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendChat();}"></textarea>
+      <button class="chat-send" id="chat-send" onclick="sendChat()">送信</button>
+    </div>
+  </div>
+</div>
+
+<!-- Settings -->
+<div id="page-settings" class="page">
+  <div class="ph"><h1>店舗設定</h1><p>自店舗・競合店を個別に管理できます</p></div>
+  <div class="settings-wrap">
+
+    <!-- 自店舗 -->
+    <div class="sec">
+      <div class="sec-hd"><span class="sec-title">🏠 自店舗</span></div>
+      <div class="sec-sub-hd">登録済み</div>
+      <div class="store-list" id="own-store-list"><div class="loading">読み込み中...</div></div>
+      <div class="sec-sub-hd">追加</div>
+      <div class="sf">
+        <div class="fg"><label class="fl">店舗名</label><input class="fi" id="own-name" placeholder="例: いちえん本店"></div>
+        <div class="fg"><label class="fl">Google Place ID</label><input class="fi" id="own-pid" placeholder="ChIJxxxxxxxxxxxxxxxx"></div>
+        <button class="btn btn-p" onclick="addStore(true)">自店舗として追加</button>
+      </div>
+    </div>
+
+    <!-- 競合店 -->
+    <div class="sec">
+      <div class="sec-hd"><span class="sec-title">🏁 競合店</span></div>
+      <div class="sec-sub-hd">登録済み</div>
+      <div class="store-list" id="comp-store-list"><div class="loading">読み込み中...</div></div>
+      <div class="sec-sub-hd">追加</div>
+      <div class="sf">
+        <div class="fg"><label class="fl">店舗名</label><input class="fi" id="comp-name" placeholder="例: 炭火焼肉あじと"></div>
+        <div class="fg"><label class="fl">Google Place ID</label><input class="fi" id="comp-pid" placeholder="ChIJxxxxxxxxxxxxxxxx"></div>
+        <button class="btn btn-p" style="background:#555;" onclick="addStore(false)">競合店として追加</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</main>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ---- State ----
+let chatHistory = [];
+
+// ---- Nav ----
+function showPage(name, el) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-a').forEach(a=>a.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  if(el) el.classList.add('active');
+  if(name==='reviews') loadAllReviews();
+  if(name==='competitors') loadCompetitors();
+  if(name==='settings') loadStores();
+}
+
+// ---- Toast ----
+function toast(msg,ms=2500){
+  const el=document.getElementById('toast');
+  el.textContent=msg;el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'),ms);
+}
+
+// ---- Auth ----
+async function logout(){await fetch('/api/logout',{method:'POST'});location.href='/login';}
+
+// ---- Helpers ----
+function star(r){return r?'★'+parseFloat(r).toFixed(1):'—';}
+function urgBadge(u){
+  if(!u)return'';
+  const cls=u>=70?'urg-hi':u>=40?'urg-mid':'urg-lo';
+  return`<span class="b-urg ${cls}">緊急度${u}</span>`;
+}
+function sEmoji(s){return{positive:'🟢',neutral:'🟡',negative:'🔴'}[s]||'⚪';}
+function tagHtml(t){return(t||[]).map(x=>`<span class="tag">${x}</span>`).join(' ');}
+function reviewCard(r){
+  const topics=Array.isArray(r.topics)?r.topics:[];
+  const reply=r.reply_draft_ja?`<div class="rv-reply"><div class="rv-rl">📝 返信案</div><div class="rv-rt">${r.reply_draft_ja}</div></div>`:'';
+  return`<div class="rv">
+    <div class="rv-meta">
+      <span class="b-store">${r.place_name||''}</span>
+      <span>${sEmoji(r.sentiment)} ${star(r.rating)}</span>
+      ${urgBadge(r.urgency)}${tagHtml(topics)}
+      <span class="rv-date">${(r.seen_at||'').slice(0,10)}</span>
+    </div>
+    ${r.summary_ja?`<div class="rv-sum">${r.summary_ja}</div>`:''}
+    <div class="rv-txt">${(r.text||'').slice(0,400)}</div>
+    ${reply}
+  </div>`;
+}
+
+// ---- Dashboard ----
+async function loadDashboard(){
+  const [summary,alerts,recent]=await Promise.all([
+    fetch('/api/summary').then(r=>r.json()),
+    fetch('/api/alerts').then(r=>r.json()),
+    fetch('/api/reviews?limit=5&own_only=1').then(r=>r.json()),
+  ]);
+  const own=summary.find(s=>s.is_own)||{};
+  const others=summary.filter(s=>!s.is_own);
+  const avgO=others.length?others.reduce((a,s)=>a+(s.avg_rating||0),0)/others.length:0;
+  const diff=own.avg_rating&&avgO?own.avg_rating-avgO:0;
+  document.getElementById('stat-grid').innerHTML=`
+    <div class="sc"><div class="sc-lbl">自店評価</div>
+      <div class="sc-val ${own.avg_rating>=4?'green':''}">${own.avg_rating?parseFloat(own.avg_rating).toFixed(1):'—'}</div>
+      <div class="sc-sub">${own.total_reviews||0}件</div></div>
+    <div class="sc"><div class="sc-lbl">本日の新着</div>
+      <div class="sc-val ${(own.new_today||0)>0?'green':''}">${own.new_today||0}</div>
+      <div class="sc-sub">自店舗</div></div>
+    <div class="sc"><div class="sc-lbl">未対応アラート</div>
+      <div class="sc-val ${(own.alert_count||0)>0?'red':''}">${own.alert_count||0}</div>
+      <div class="sc-sub">緊急度70以上</div></div>
+    <div class="sc"><div class="sc-lbl">競合との差</div>
+      <div class="sc-val ${diff>=0?'green':'red'}">${diff>=0?'+':''}${diff.toFixed(2)}</div>
+      <div class="sc-sub">競合平均 ${star(avgO.toFixed(1))}</div></div>`;
+  document.getElementById('alert-count').textContent=`${alerts.length}件`;
+  document.getElementById('alert-list').innerHTML=alerts.length?alerts.map(reviewCard).join(''):'<div class="no-data">🎉 現在アラートはありません</div>';
+  document.getElementById('recent-list').innerHTML=recent.length?recent.map(reviewCard).join(''):'<div class="no-data">まだレビューがありません</div>';
+  document.getElementById('last-updated').textContent='最終更新: '+new Date().toLocaleString('ja-JP');
+}
+
+// ---- Reviews ----
+async function loadAllReviews(){
+  const data=await fetch('/api/reviews?limit=50&own_only=1').then(r=>r.json());
+  document.getElementById('all-reviews-list').innerHTML=data.length?data.map(reviewCard).join(''):'<div class="no-data">まだレビューがありません</div>';
+}
+
+// ---- Competitors ----
+async function loadCompetitors(){
+  const data=await fetch('/api/summary').then(r=>r.json());
+  const sorted=[...data].sort((a,b)=>(b.avg_rating||0)-(a.avg_rating||0));
+  const ownR=(data.find(s=>s.is_own)||{}).avg_rating||0;
+  document.getElementById('comp-tbody').innerHTML=sorted.map((s,i)=>{
+    const d=s.avg_rating&&ownR&&!s.is_own?(ownR-s.avg_rating):null;
+    const dh=d===null?'—':d>=0?`<span class="dp">+${d.toFixed(2)}</span>`:`<span class="dn">${d.toFixed(2)}</span>`;
+    return`<tr class="${s.is_own?'own':''}">
+      <td><span class="rank">${i+1}</span></td>
+      <td>${s.is_own?'<span class="own-dot"></span>':''}${s.name}</td>
+      <td>★ ${s.avg_rating?parseFloat(s.avg_rating).toFixed(1):'—'}</td>
+      <td>${s.total_reviews||0}件</td><td>${dh}</td></tr>`;
+  }).join('');
+}
+
+// ---- Settings ----
+async function loadStores(){
+  const data=await fetch('/api/stores').then(r=>r.json());
+  const own=data.filter(s=>s.is_own);
+  const comp=data.filter(s=>!s.is_own);
+  const toHtml=s=>`<div class="sr">
+    <div class="si"><span class="sn">${s.name}</span><span class="sid">${s.place_id}</span></div>
+    <button class="btn btn-d" onclick="removeStore('${s.place_id}','${s.name}')">削除</button></div>`;
+  document.getElementById('own-store-list').innerHTML=own.length?own.map(toHtml).join(''):'<div style="padding:12px 0;color:var(--sub);font-size:12px;">未登録</div>';
+  document.getElementById('comp-store-list').innerHTML=comp.length?comp.map(toHtml).join(''):'<div style="padding:12px 0;color:var(--sub);font-size:12px;">未登録</div>';
+}
+
+async function addStore(isOwn){
+  const prefix=isOwn?'own':'comp';
+  const name=document.getElementById(prefix+'-name').value.trim();
+  const place_id=document.getElementById(prefix+'-pid').value.trim();
+  if(!name||!place_id){toast('店舗名とPlace IDを入力してください');return;}
+  await fetch('/api/stores',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({name,place_id,is_own:isOwn})});
+  toast('追加しました');
+  document.getElementById(prefix+'-name').value='';
+  document.getElementById(prefix+'-pid').value='';
+  loadStores();
+}
+
+async function removeStore(pid,name){
+  if(!confirm(`「${name}」を削除しますか？`))return;
+  await fetch('/api/stores/'+encodeURIComponent(pid),{method:'DELETE'});
+  toast('削除しました');loadStores();
+}
+
+// ---- Manual Refresh ----
+async function manualRefresh(){
+  toast('更新中...',5000);
+  const res=await fetch('/api/refresh',{method:'POST'});
+  const d=await res.json();
+  toast(`更新完了: 新規${d.new_reviews}件`);
+  loadDashboard();
+}
+
+// ---- AI Chat ----
+function sendSugg(el){
+  document.getElementById('chat-input').value=el.textContent;
+  sendChat();
+}
+
+function appendMsg(role,text){
+  const msgs=document.getElementById('chat-msgs');
+  const isAi=role==='assistant';
+  const div=document.createElement('div');
+  div.className=`msg ${role==='user'?'user':''}`;
+  div.innerHTML=`
+    <div class="msg-avatar ${isAi?'ai-av':'user-av'}">${isAi?'AI':'私'}</div>
+    <div class="msg-bubble ${isAi?'ai-bubble':'user-bubble'}" id="msg-${Date.now()}">${text}</div>`;
+  msgs.appendChild(div);
+  msgs.scrollTop=msgs.scrollHeight;
+  return div.querySelector('.msg-bubble');
+}
+
+async function sendChat(){
+  const input=document.getElementById('chat-input');
+  const send=document.getElementById('chat-send');
+  const msg=input.value.trim();
+  if(!msg||send.disabled)return;
+
+  input.value='';input.style.height='44px';
+  send.disabled=true;
+
+  appendMsg('user',msg);
+  chatHistory.push({role:'user',content:msg});
+
+  // typing indicator
+  const msgs=document.getElementById('chat-msgs');
+  const typingDiv=document.createElement('div');
+  typingDiv.className='msg';
+  typingDiv.innerHTML=`<div class="msg-avatar ai-av">AI</div>
+    <div class="msg-bubble ai-bubble"><div class="typing"><span></span><span></span><span></span></div></div>`;
+  msgs.appendChild(typingDiv);msgs.scrollTop=msgs.scrollHeight;
+
+  let fullText='';
+  const aiBubble=appendMsg('assistant','');
+  typingDiv.remove();
+
+  try{
+    const res=await fetch('/api/chat',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({message:msg,history:chatHistory.slice(-8)})
+    });
+    const reader=res.body.getReader();
+    const dec=new TextDecoder();
+    while(true){
+      const{done,value}=await reader.read();
+      if(done)break;
+      const chunk=dec.decode(value);
+      for(const line of chunk.split('\n')){
+        if(!line.startsWith('data: '))continue;
+        const d=line.slice(6);
+        if(d==='[DONE]')break;
+        try{
+          const obj=JSON.parse(d);
+          if(obj.text){fullText+=obj.text;aiBubble.textContent=fullText;}
+        }catch{}
+      }
+      msgs.scrollTop=msgs.scrollHeight;
+    }
+    chatHistory.push({role:'assistant',content:fullText});
+  }catch(e){
+    aiBubble.textContent='エラーが発生しました。再度お試しください。';
+  }
+  send.disabled=false;
+  input.focus();
+}
+
+// auto-resize textarea
+document.addEventListener('DOMContentLoaded',()=>{
+  const ta=document.getElementById('chat-input');
+  if(ta)ta.addEventListener('input',()=>{ta.style.height='44px';ta.style.height=Math.min(ta.scrollHeight,120)+'px';});
+});
+
+loadDashboard();
+</script>
+</body>
+</html>
