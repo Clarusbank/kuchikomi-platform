@@ -171,6 +171,50 @@ def refresh(request: Request):
     u = get_current_user(request)
     return {"ok": True, "new_reviews": run_daily_check(target_user_id=u["id"])}
 
+# ---------- CSV Import ----------
+from fastapi import UploadFile, File, Form
+import csv, io
+from datetime import datetime
+
+@app.get("/api/import-template")
+def import_template(request: Request):
+    get_current_user(request)
+    content = "date,rating,author,text\n2024-01-15,5,田中太郎,素晴らしいお肉でした。志方牛のクオリティに感動。\n2024-02-20,4,山田花子,接客が丁寧で居心地よかったです。\n"
+    return Response(content=content, media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=review_template.csv"})
+
+@app.post("/api/import-reviews")
+async def import_reviews(request: Request, file: UploadFile = File(...), place_id: str = Form(...)):
+    u = get_current_user(request)
+    stores = db.get_stores(u["id"])
+    store = next((s for s in stores if s["place_id"] == place_id), None)
+    if not store: raise HTTPException(400, "指定された店舗が見つかりません")
+    content = await file.read()
+    text = content.decode("utf-8-sig")
+    reader = csv.DictReader(io.StringIO(text))
+    imported = 0
+    errors = []
+    for i, row in enumerate(reader, 1):
+        try:
+            date_str = row.get("date","").strip()
+            rating = max(1, min(5, int(float(row.get("rating","3").strip()))))
+            author = row.get("author","匿名").strip() or "匿名"
+            text_content = row.get("text","").strip()
+            if not text_content: continue
+            publish_time = date_str or "2024-01-01T00:00:00"
+            for fmt in ["%Y-%m-%d","%Y/%m/%d","%m/%d/%Y","%Y年%m月%d日"]:
+                try:
+                    publish_time = datetime.strptime(date_str, fmt).isoformat(); break
+                except: pass
+            h = db.review_hash(place_id, author, publish_time)
+            if not db.is_seen(u["id"], h):
+                db.mark_seen(u["id"], h, place_id, store["name"],
+                    author, rating, text_content, publish_time, analysis={})
+                imported += 1
+        except Exception as e:
+            errors.append(f"行{i}: {str(e)}")
+    return {"ok": True, "imported": imported, "errors": errors[:5]}
+
 # ---------- AI Chat ----------
 def build_system_prompt(stores, recent_reviews, alerts):
     own  = [s for s in stores if s.get("is_own")]

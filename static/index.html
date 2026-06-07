@@ -251,6 +251,38 @@ body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--tx);
     </div>
 
   </div>
+
+  <!-- CSV Import -->
+  <div class="sec" style="margin-top:24px;">
+    <div class="sec-hd"><span class="sec-title">📥 過去データのインポート</span></div>
+    <div class="sf">
+      <p style="font-size:13px;color:var(--sub);margin-bottom:16px;line-height:1.7;">
+        過去のGoogleレビューをCSVファイルでインポートできます。<br>
+        テンプレートをダウンロードしてデータを入力後、アップロードしてください。
+      </p>
+      <button class="btn btn-p" style="background:#555;margin-bottom:16px;" onclick="downloadTemplate()">📄 CSVテンプレートをダウンロード</button>
+      <div class="fg">
+        <label class="fl">インポート先の店舗</label>
+        <select class="fi" id="import-store-sel" style="cursor:pointer;">
+          <option value="">店舗を選択...</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label class="fl">CSVファイルを選択</label>
+        <input class="fi" type="file" id="import-file" accept=".csv" style="padding:8px;">
+      </div>
+      <button class="btn btn-p" onclick="importReviews()">インポート実行</button>
+      <div id="import-result" style="margin-top:12px;font-size:13px;display:none;padding:10px;border-radius:8px;"></div>
+    </div>
+    <div style="background:#f8f8f6;border-top:1px solid var(--bd);padding:14px 20px;">
+      <p style="font-size:11px;color:var(--sub);font-weight:500;margin-bottom:6px;">CSVの列（1行目はヘッダー必須）</p>
+      <code style="font-size:11px;color:#555;background:#fff;border:1px solid var(--bd);border-radius:6px;padding:8px 12px;display:block;line-height:1.8;">
+        date,rating,author,text<br>
+        2024-01-15,5,田中太郎,素晴らしいお肉でした...<br>
+        2024-02-20,4,山田花子,接客が丁寧で...
+      </code>
+    </div>
+  </div>
 </div>
 
 </main>
@@ -387,6 +419,50 @@ async function loadStores(){
     <button class="btn btn-d" onclick="removeStore('${s.place_id}','${s.name}')">削除</button></div>`;
   document.getElementById('own-store-list').innerHTML=own.length?own.map(toHtml).join(''):'<div style="padding:12px 0;color:var(--sub);font-size:12px;">未登録</div>';
   document.getElementById('comp-store-list').innerHTML=comp.length?comp.map(toHtml).join(''):'<div style="padding:12px 0;color:var(--sub);font-size:12px;">未登録</div>';
+  // インポート用セレクターを更新
+  const sel=document.getElementById('import-store-sel');
+  sel.innerHTML='<option value="">店舗を選択...</option>';
+  own.forEach(s=>{
+    const opt=document.createElement('option');
+    opt.value=s.place_id; opt.textContent=s.name;
+    sel.appendChild(opt);
+  });
+}
+
+function downloadTemplate(){
+  window.location.href='/api/import-template';
+}
+
+async function importReviews(){
+  const placeId=document.getElementById('import-store-sel').value;
+  const fileInput=document.getElementById('import-file');
+  const resultEl=document.getElementById('import-result');
+  if(!placeId){toast('インポート先の店舗を選択してください');return;}
+  if(!fileInput.files[0]){toast('CSVファイルを選択してください');return;}
+  const fd=new FormData();
+  fd.append('file',fileInput.files[0]);
+  fd.append('place_id',placeId);
+  resultEl.style.display='block';
+  resultEl.style.background='#f4f5f0';
+  resultEl.textContent='インポート中...';
+  try{
+    const res=await fetch('/api/import-reviews',{method:'POST',body:fd});
+    const data=await res.json();
+    if(data.ok){
+      resultEl.style.background='#e8f0eb';
+      resultEl.style.color='#1a3d2b';
+      resultEl.textContent=`✅ ${data.imported}件のレビューをインポートしました`;
+      if(data.errors&&data.errors.length>0){
+        resultEl.textContent+=`（エラー: ${data.errors.join(', ')}）`;
+      }
+      toast(`${data.imported}件インポート完了`);
+      fileInput.value='';
+    }
+  }catch(e){
+    resultEl.style.background='var(--rp)';
+    resultEl.style.color='var(--red)';
+    resultEl.textContent='エラーが発生しました';
+  }
 }
 
 async function addStore(isOwn){
