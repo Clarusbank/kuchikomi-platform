@@ -180,7 +180,7 @@ def get_store_stats(user_id):
         SELECT s.place_id,s.name,s.is_own,
                COUNT(r.review_hash) as total_reviews,
                AVG(r.rating) as avg_rating,
-               SUM(CASE WHEN r.seen_at >= {interval} THEN 1 ELSE 0 END) as new_today,
+               SUM(CASE WHEN CAST(r.seen_at AS timestamptz) >= {interval} THEN 1 ELSE 0 END) as new_today,
                SUM(CASE WHEN r.urgency>=70 THEN 1 ELSE 0 END) as alert_count
         FROM stores s LEFT JOIN seen_reviews r ON s.place_id=r.place_id AND s.user_id=r.user_id
         WHERE s.user_id=? GROUP BY s.place_id,s.name,s.is_own ORDER BY s.is_own DESC,s.name
