@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>料金プラン | PRIME GATE 口コミ管理</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Noto Sans JP',sans-serif;background:#f8fafc;color:#1a1a1a}
+header{background:#1e293b;padding:20px 40px;display:flex;align-items:center;justify-content:space-between}
+header h1{color:#fff;font-size:18px;font-weight:700}
+header nav a{color:#94a3b8;font-size:13px;text-decoration:none;margin-left:24px}
+header nav a:hover{color:#fff}
+.hero{text-align:center;padding:80px 40px 60px;background:linear-gradient(135deg,#1e293b 0%,#2563eb 100%);color:#fff}
+.hero h2{font-size:36px;font-weight:900;margin-bottom:16px}
+.hero p{font-size:16px;color:#cbd5e1;max-width:560px;margin:0 auto}
+.plans{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;max-width:1000px;margin:-40px auto 60px;padding:0 40px}
+.plan{background:#fff;border-radius:16px;padding:32px;border:2px solid #e2e8f0;position:relative;box-shadow:0 4px 20px rgba(0,0,0,.06)}
+.plan.popular{border-color:#2563eb;transform:scale(1.03)}
+.pop-badge{position:absolute;top:-14px;left:50%;transform:translateX(-50%);background:#2563eb;color:#fff;font-size:11px;font-weight:700;padding:4px 16px;border-radius:20px;white-space:nowrap}
+.plan-name{font-size:13px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px}
+.plan-price{font-size:40px;font-weight:900;color:#1e293b;margin-bottom:4px}
+.plan-price span{font-size:14px;font-weight:400;color:#64748b}
+.plan-stores{font-size:13px;color:#64748b;margin-bottom:24px;padding-bottom:24px;border-bottom:1px solid #f1f5f9}
+.plan-features{list-style:none;margin-bottom:28px}
+.plan-features li{font-size:13px;padding:7px 0;color:#374151;display:flex;align-items:flex-start;gap:8px;line-height:1.5}
+.plan-features li::before{content:'✓';color:#16a34a;font-weight:700;flex-shrink:0}
+.plan-features li.no::before{content:'✗';color:#d1d5db}
+.plan-features li.no{color:#9ca3af}
+.btn{display:block;width:100%;padding:14px;text-align:center;border-radius:8px;font-size:14px;font-weight:700;text-decoration:none;transition:.15s;font-family:inherit;border:none;cursor:pointer}
+.btn-outline{background:#fff;color:#2563eb;border:2px solid #2563eb}
+.btn-outline:hover{background:#eff4ff}
+.btn-solid{background:#2563eb;color:#fff}
+.btn-solid:hover{background:#1d4ed8}
+.section{max-width:900px;margin:0 auto 60px;padding:0 40px}
+.section h3{font-size:22px;font-weight:700;margin-bottom:24px;text-align:center}
+.faq{display:flex;flex-direction:column;gap:16px}
+.faq-item{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:20px 24px}
+.faq-q{font-size:14px;font-weight:600;margin-bottom:8px;color:#1e293b}
+.faq-a{font-size:13px;color:#64748b;line-height:1.7}
+.features-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.feature-card{background:#fff;border-radius:12px;padding:24px;border:1px solid #e2e8f0;text-align:center}
+.feature-icon{font-size:32px;margin-bottom:12px}
+.feature-name{font-size:14px;font-weight:700;margin-bottom:8px}
+.feature-desc{font-size:12px;color:#64748b;line-height:1.6}
+.cta{background:linear-gradient(135deg,#1e293b,#2563eb);color:#fff;text-align:center;padding:60px 40px}
+.cta h3{font-size:28px;font-weight:700;margin-bottom:12px}
+.cta p{color:#cbd5e1;margin-bottom:28px;font-size:14px}
+.cta a{display:inline-block;background:#fff;color:#2563eb;padding:16px 40px;border-radius:8px;font-weight:700;text-decoration:none;font-size:15px}
+footer{background:#1e293b;color:#94a3b8;text-align:center;padding:24px;font-size:12px}
+footer a{color:#64748b;margin:0 12px;text-decoration:none}
+</style>
+</head>
+<body>
+<header>
+  <h1>📊 PRIME GATE</h1>
+  <nav>
+    <a href="/">ダッシュボード</a>
+    <a href="/terms">利用規約</a>
+    <a href="/privacy">プライバシーポリシー</a>
+  </nav>
+</header>
+
+<div class="hero">
+  <h2>シンプルな料金プラン</h2>
+  <p>飲食店の規模に合わせて選べる3つのプラン。全プラン初月無料でお試しいただけます。</p>
+</div>
+
+<div class="plans">
+  <div class="plan">
+    <div class="plan-name">スタータープラン</div>
+    <div class="plan-price">¥29,800<span>/月</span></div>
+    <div class="plan-stores">1〜3店舗向け</div>
+    <ul class="plan-features">
+      <li>Googleレビュー自動収集</li>
+      <li>AI感情分析・要約</li>
+      <li>アラート通知</li>
+      <li>返信案の自動生成</li>
+      <li>月次レポート</li>
+      <li class="no">競合比較分析</li>
+      <li class="no">AI分析チャット</li>
+    </ul>
+    <a href="mailto:info@primegate.jp?subject=スタータープラン問い合わせ" class="btn btn-outline">お問い合わせ</a>
+  </div>
+
+  <div class="plan popular">
+    <div class="pop-badge">人気No.1</div>
+    <div class="plan-name">スタンダードプラン</div>
+    <div class="plan-price">¥59,800<span>/月</span></div>
+    <div class="plan-stores">4〜10店舗向け</div>
+    <ul class="plan-features">
+      <li>Googleレビュー自動収集</li>
+      <li>AI感情分析・要約</li>
+      <li>アラート通知</li>
+      <li>返信案の自動生成</li>
+      <li>月次レポート</li>
+      <li>競合比較分析（最大5店舗）</li>
+      <li>AI分析チャット</li>
+    </ul>
+    <a href="mailto:info@primegate.jp?subject=スタンダードプラン問い合わせ" class="btn btn-solid">お問い合わせ</a>
+  </div>
+
+  <div class="plan">
+    <div class="plan-name">エンタープライズ</div>
+    <div class="plan-price">要相談</div>
+    <div class="plan-stores">11店舗以上・チェーン向け</div>
+    <ul class="plan-features">
+      <li>スタンダードの全機能</li>
+      <li>無制限の競合比較</li>
+      <li>専任サポート担当</li>
+      <li>カスタムレポート</li>
+      <li>API連携</li>
+      <li>グループ一括管理</li>
+      <li>初期導入支援込み</li>
+    </ul>
+    <a href="mailto:info@primegate.jp?subject=エンタープライズ問い合わせ" class="btn btn-outline">ご相談はこちら</a>
+  </div>
+</div>
+
+<div class="section">
+  <h3>主な機能</h3>
+  <div class="features-grid">
+    <div class="feature-card"><div class="feature-icon">🤖</div><div class="feature-name">AI感情分析</div><div class="feature-desc">Claude AIが全口コミを自動分析。感情・緊急度・要約を即座に生成します</div></div>
+    <div class="feature-card"><div class="feature-icon">📈</div><div class="feature-name">評価推移グラフ</div><div class="feature-desc">月別の評価変化を可視化。改善施策の効果を数値で確認できます</div></div>
+    <div class="feature-card"><div class="feature-icon">🔔</div><div class="feature-name">リアルタイムアラート</div><div class="feature-desc">低評価・ネガティブ口コミを自動検出。返信案も同時に生成します</div></div>
+    <div class="feature-card"><div class="feature-icon">💬</div><div class="feature-name">返信案の自動生成</div><div class="feature-desc">口コミの内容に合わせた自然な返信案をAIが提案。コピーして即使用可能</div></div>
+    <div class="feature-card"><div class="feature-icon">🏁</div><div class="feature-name">競合比較</div><div class="feature-desc">エリア内の競合店との評価差をリアルタイムで比較。差別化ポイントを発見</div></div>
+    <div class="feature-card"><div class="feature-icon">📋</div><div class="feature-name">月次レポート</div><div class="feature-desc">月別の口コミ集計・傾向分析を自動生成。経営会議にそのまま使えます</div></div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>よくある質問</h3>
+  <div class="faq">
+    <div class="faq-item"><div class="faq-q">初月無料とはどういう意味ですか？</div><div class="faq-a">契約後の最初の1ヶ月間は費用が発生しません。使い勝手を確認いただいた上で継続をご判断いただけます。</div></div>
+    <div class="faq-item"><div class="faq-q">Google Business Profile APIとの連携は必要ですか？</div><div class="faq-a">現在はGoogle Place IDを使った自動収集に対応しています。今後、Google Business Profile APIとのOAuth連携により返信機能も追加予定です。</div></div>
+    <div class="faq-item"><div class="faq-q">過去の口コミデータは取り込めますか？</div><div class="faq-a">CSVファイルでの過去データのインポートに対応しています。Google Business Profile API連携後は自動で全履歴を取得できるようになります。</div></div>
+    <div class="faq-item"><div class="faq-q">解約はいつでもできますか？</div><div class="faq-a">月単位のご契約です。翌月分の請求前にご連絡いただければいつでも解約できます。違約金等は一切ありません。</div></div>
+  </div>
+</div>
+
+<div class="cta">
+  <h3>まずは無料でお試しください</h3>
+  <p>初月無料・クレジットカード不要。導入から最短1日で利用開始できます。</p>
+  <a href="mailto:info@primegate.jp?subject=口コミ管理ツール 無料トライアル申込">無料トライアルを申し込む</a>
+</div>
+
+<footer>
+  <p>© 2026 株式会社PRIME GATE　<a href="/terms">利用規約</a><a href="/privacy">プライバシーポリシー</a></p>
+</footer>
+</body>
+</html>
